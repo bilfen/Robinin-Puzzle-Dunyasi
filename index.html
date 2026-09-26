@@ -1,0 +1,912 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#2563eb">
+  <title>Robi'nin Puzzle Dünyası</title>
+  <style>
+    :root {
+      --ink: #172554;
+      --muted: #52627f;
+      --blue: #2563eb;
+      --blue-dark: #1d4ed8;
+      --cyan: #06b6d4;
+      --yellow: #facc15;
+      --coral: #fb7185;
+      --mint: #34d399;
+      --paper: #ffffff;
+      --sky: #eff6ff;
+      --line: #dbeafe;
+      --shadow: 0 18px 45px rgba(30, 64, 175, .13);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { min-height: 100%; }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+      background:
+        radial-gradient(circle at 8% 8%, rgba(125, 211, 252, .55), transparent 28%),
+        radial-gradient(circle at 94% 14%, rgba(253, 224, 71, .42), transparent 25%),
+        linear-gradient(135deg, #f8fbff 0%, #eef6ff 46%, #fefce8 100%);
+    }
+
+    button { font: inherit; }
+
+    .app-shell {
+      width: min(1180px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 18px 0 28px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 58px;
+      height: 58px;
+      flex: 0 0 58px;
+      border: 5px solid #fff;
+      border-radius: 20px;
+      color: #fff;
+      background: linear-gradient(145deg, #0ea5e9, #2563eb 64%, #7c3aed);
+      box-shadow: 0 9px 20px rgba(37, 99, 235, .26);
+      overflow: hidden;
+    }
+    .brand-mark img { width: 100%; height: 100%; object-fit: contain; background: #fff; }
+    .school-logo { max-width: 130px; max-height: 53px; object-fit: contain; background: white; border-radius: 10px; padding: 5px; }
+
+    .brand h1 {
+      margin: 0;
+      font-size: clamp(1.15rem, 2.8vw, 1.7rem);
+      line-height: 1.05;
+      letter-spacing: -.03em;
+    }
+
+    .brand p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    .top-actions { display: flex; gap: 9px; flex-wrap: wrap; justify-content: flex-end; }
+
+    .icon-button, .primary-button, .secondary-button {
+      border: 0;
+      border-radius: 14px;
+      padding: 11px 15px;
+      cursor: pointer;
+      transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+
+    .icon-button:hover, .primary-button:hover, .secondary-button:hover,
+    .activity-card:hover { transform: translateY(-2px); }
+
+    .icon-button:focus-visible, .primary-button:focus-visible, .secondary-button:focus-visible,
+    .activity-card:focus-visible, .piece:focus-visible, .slot:focus-visible {
+      outline: 4px solid rgba(14, 165, 233, .3);
+      outline-offset: 3px;
+    }
+
+    .icon-button {
+      color: var(--ink);
+      background: rgba(255, 255, 255, .9);
+      box-shadow: 0 8px 18px rgba(30, 64, 175, .09);
+    }
+
+    .screen { display: none; animation: appear .35s ease both; }
+    .screen.active { display: block; }
+
+    @keyframes appear {
+      from { opacity: 0; transform: translateY(7px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      align-items: center;
+      gap: 20px;
+      min-height: 245px;
+      padding: clamp(24px, 5vw, 46px);
+      border: 1px solid rgba(255, 255, 255, .8);
+      border-radius: 30px;
+      color: #fff;
+      background:
+        radial-gradient(circle at 84% 25%, rgba(255,255,255,.28), transparent 25%),
+        linear-gradient(120deg, #1d4ed8, #0891b2 62%, #14b8a6);
+      box-shadow: var(--shadow);
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -55px;
+      bottom: -100px;
+      width: 310px;
+      height: 230px;
+      border: 28px solid rgba(255, 255, 255, .15);
+      border-radius: 50%;
+      transform: rotate(-12deg);
+    }
+
+    .hero-copy { position: relative; z-index: 1; }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: #cffafe;
+      font-size: .82rem;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .hero h2 {
+      max-width: 650px;
+      margin: 0;
+      font-size: clamp(1.85rem, 5vw, 3.4rem);
+      line-height: .98;
+      letter-spacing: -.05em;
+    }
+
+    .hero p {
+      max-width: 600px;
+      margin: 16px 0 0;
+      color: #e0f2fe;
+      font-size: 1.05rem;
+      line-height: 1.5;
+    }
+
+    .hero-orbit {
+      position: relative;
+      z-index: 1;
+      justify-self: center;
+      width: min(260px, 100%);
+      aspect-ratio: 1;
+      border: 2px solid rgba(255,255,255,.35);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,.28), rgba(255,255,255,0) 67%);
+    }
+
+    .hero-orbit::before, .hero-orbit::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255,255,255,.9);
+      box-shadow: 0 0 0 10px rgba(255,255,255,.09);
+    }
+
+    .hero-orbit::before { width: 32px; height: 32px; left: 19%; top: 17%; }
+    .hero-orbit::after { width: 18px; height: 18px; right: 18%; bottom: 20%; }
+
+    .hero-orbit { background: #fff; box-shadow: 0 13px 26px #12368a55; }
+    .hero-robi { position: absolute; inset: 8%; width: 84%; height: 84%; object-fit: contain; filter: drop-shadow(0 12px 12px #12368a66); }
+    .level-picker { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; padding: 16px; margin: 18px 0; border-radius: 20px; background: #fff; box-shadow: var(--shadow); }
+    .level-picker strong { margin-right: 8px; }
+    .level-button { border: 2px solid #c7d2fe; border-radius: 14px; padding: 9px 14px; background: #eef2ff; color: var(--ink); cursor: pointer; font-weight: 800; }
+    .level-button[aria-pressed="true"] { color: #fff; border-color: #6d28d9; background: linear-gradient(120deg,#7c3aed,#2563eb); }
+
+    .activity-heading {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 14px;
+      margin: 30px 2px 14px;
+    }
+
+    .activity-heading h3, .panel-heading h3 {
+      margin: 0;
+      font-size: clamp(1.3rem, 3vw, 1.8rem);
+      letter-spacing: -.03em;
+    }
+
+    .activity-heading p, .panel-heading p { margin: 5px 0 0; color: var(--muted); }
+
+    .mini-count {
+      flex: 0 0 auto;
+      padding: 8px 12px;
+      border-radius: 999px;
+      color: #075985;
+      background: #e0f2fe;
+      font-size: .84rem;
+      font-weight: 800;
+    }
+
+    .activity-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .activity-card {
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      padding: 0;
+      border: 1px solid rgba(255,255,255,.86);
+      border-radius: 22px;
+      text-align: left;
+      color: var(--ink);
+      background: rgba(255,255,255,.93);
+      box-shadow: 0 11px 28px rgba(30,64,175,.1);
+      cursor: pointer;
+      transition: transform .18s ease, box-shadow .18s ease;
+    }
+
+    .activity-card:hover { box-shadow: 0 16px 35px rgba(30,64,175,.18); }
+
+    .activity-image-wrap {
+      position: relative;
+      aspect-ratio: 1.2;
+      overflow: hidden;
+      background: #dbeafe;
+    }
+
+    .activity-image-wrap img { width: 100%; height: 100%; display: block; object-fit: cover; transition: transform .35s ease; }
+    .activity-card:hover .activity-image-wrap img { transform: scale(1.045); }
+
+    .activity-badge {
+      position: absolute;
+      left: 12px;
+      top: 12px;
+      padding: 6px 9px;
+      border: 1px solid rgba(255,255,255,.7);
+      border-radius: 999px;
+      color: #fff;
+      background: rgba(23, 37, 84, .72);
+      backdrop-filter: blur(7px);
+      font-size: .75rem;
+      font-weight: 800;
+    }
+
+    .activity-info { padding: 14px 15px 16px; }
+    .activity-info h4 { margin: 0; font-size: 1.06rem; }
+    .activity-info p { margin: 5px 0 0; color: var(--muted); font-size: .88rem; }
+
+    .activity-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .activity-action { color: var(--blue); font-size: .85rem; font-weight: 900; }
+    .done-pill { color: #047857; font-size: .76rem; font-weight: 900; }
+
+    .puzzle-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 20px;
+    }
+
+    .back-button { color: var(--blue-dark); background: #dbeafe; }
+
+    .puzzle-title h2 { margin: 0; font-size: clamp(1.55rem, 4vw, 2.55rem); letter-spacing: -.05em; }
+    .puzzle-title p { margin: 6px 0 0; color: var(--muted); }
+
+    .puzzle-actions { display: flex; gap: 9px; flex-wrap: wrap; justify-content: flex-end; }
+    .primary-button { color: #fff; background: linear-gradient(135deg, var(--blue), #7c3aed); box-shadow: 0 9px 18px rgba(37,99,235,.22); }
+    .secondary-button { color: var(--ink); background: #fff; box-shadow: 0 8px 18px rgba(30,64,175,.08); }
+
+    .progress-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .progress-track { height: 13px; overflow: hidden; border-radius: 999px; background: #dbeafe; }
+    .progress-fill { width: 0%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #06b6d4, #2563eb, #7c3aed); transition: width .3s ease; }
+    .progress-label { min-width: 92px; text-align: right; color: var(--muted); font-size: .86rem; font-weight: 800; }
+
+    .puzzle-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.03fr) minmax(310px, .97fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      min-width: 0;
+      padding: clamp(15px, 3vw, 24px);
+      border: 1px solid rgba(255,255,255,.88);
+      border-radius: 24px;
+      background: rgba(255,255,255,.88);
+      box-shadow: var(--shadow);
+    }
+
+    .panel-heading { margin-bottom: 14px; }
+    .panel-heading h3 { font-size: 1.25rem; }
+
+    .puzzle-board {
+      display: grid;
+      grid-template-columns: repeat(var(--grid-cols, 3), minmax(0, 1fr));
+      gap: 2px;
+      width: min(100%, 620px);
+      margin: 0 auto;
+      padding: 8px;
+      border: 4px solid #bfdbfe;
+      border-radius: 22px;
+      background: linear-gradient(135deg, #dbeafe, #ede9fe);
+      box-shadow: inset 0 0 0 2px rgba(255,255,255,.7), 0 15px 34px rgba(30,64,175,.12);
+      aspect-ratio: 1;
+    }
+
+    .slot {
+      position: relative;
+      display: grid;
+      place-items: center;
+      min-width: 0;
+      padding: 0;
+      border: 1px dashed #93c5fd;
+      border-radius: 3px;
+      background: rgba(255,255,255,.5);
+      cursor: pointer;
+      transition: background .16s ease, border-color .16s ease, transform .16s ease;
+    }
+
+    .slot:hover { border-color: #2563eb; background: rgba(255,255,255,.8); }
+    .slot.correct { border: 1px solid #34d399; background: rgba(209,250,229,.66); }
+
+    .tile {
+      display: block;
+      width: 100%;
+      height: 100%;
+      min-width: 0;
+      padding: 0;
+      border: 0;
+      border-radius: 2px;
+      background-repeat: no-repeat;
+      cursor: grab;
+      box-shadow: 0 5px 12px rgba(30,64,175,.16);
+      touch-action: manipulation;
+      transition: transform .16s ease, box-shadow .16s ease, filter .16s ease;
+    }
+
+    .tile:hover { transform: scale(1.025); box-shadow: 0 8px 17px rgba(30,64,175,.23); }
+    .tile:active, .tile.dragging { cursor: grabbing; transform: scale(.97); filter: saturate(1.1); }
+    .tile.selected { box-shadow: 0 0 0 5px #facc15, 0 9px 19px rgba(234,179,8,.27); }
+
+    .piece-tray {
+      display: grid;
+      grid-template-columns: repeat(var(--grid-cols, 3), minmax(0, 1fr));
+      gap: 3px;
+      align-content: start;
+      max-height: min(68vh, 620px);
+      overflow-y: auto;
+      min-height: 260px;
+      padding: 12px;
+      border: 2px dashed #c4b5fd;
+      border-radius: 18px;
+      background: #faf5ff;
+    }
+
+    .piece-tray .tile { aspect-ratio: var(--grid-rows, 3) / var(--grid-cols, 3); }
+    .tray-empty {
+      grid-column: 1 / -1;
+      display: grid;
+      place-items: center;
+      min-height: 220px;
+      color: #7c3aed;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .help-strip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 16px;
+      padding: 12px 15px;
+      border-radius: 15px;
+      color: #075985;
+      background: #e0f2fe;
+      font-size: .9rem;
+      line-height: 1.45;
+    }
+
+    .help-strip strong { color: var(--ink); }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: rgba(15, 23, 42, .62);
+      backdrop-filter: blur(8px);
+    }
+
+    .modal[hidden] { display: none; }
+
+    .modal-card {
+      position: relative;
+      width: min(520px, 100%);
+      max-height: min(90vh, 760px);
+      overflow: auto;
+      padding: 24px;
+      border-radius: 26px;
+      text-align: center;
+      background: #fff;
+      box-shadow: 0 25px 80px rgba(15,23,42,.3);
+      animation: pop .28s ease both;
+    }
+
+    @keyframes pop { from { opacity: 0; transform: scale(.94); } to { opacity: 1; transform: scale(1); } }
+    .modal-card h2 { margin: 0; font-size: 1.8rem; letter-spacing: -.04em; }
+    .modal-card p { margin: 9px 0 17px; color: var(--muted); line-height: 1.5; }
+    .modal-card img { display: block; width: 100%; border-radius: 17px; }
+    .modal-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 9px; margin-top: 17px; }
+    .close-x { position: absolute; right: 14px; top: 12px; border: 0; color: var(--muted); background: transparent; font-size: 1.5rem; cursor: pointer; }
+    .success-stars { margin: 3px 0 7px; color: #f59e0b; font-size: 2rem; letter-spacing: .08em; }
+
+    footer { margin-top: 25px; color: #64748b; text-align: center; font-size: .82rem; }
+
+    @media (max-width: 820px) {
+      .hero { grid-template-columns: 1fr; }
+      .hero-orbit { width: 180px; }
+      .activity-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .puzzle-layout { grid-template-columns: 1fr; }
+      .puzzle-board { width: min(100%, 620px); }
+    }
+
+    @media (max-width: 560px) {
+      .app-shell { width: min(100% - 18px, 1180px); padding-top: 10px; }
+      .topbar { align-items: flex-start; }
+      .brand-mark { width: 48px; height: 48px; flex-basis: 48px; border-radius: 16px; font-size: 23px; }
+      .brand p { font-size: .78rem; }
+      .top-actions .icon-button { padding: 9px 11px; }
+      .hero { border-radius: 23px; padding: 25px 20px; }
+      .hero p { font-size: .94rem; }
+      .activity-heading, .puzzle-top { display: block; }
+      .mini-count { display: inline-block; margin-top: 11px; }
+      .puzzle-actions { justify-content: flex-start; margin-top: 15px; }
+      .activity-grid { gap: 10px; }
+      .activity-card { border-radius: 17px; }
+      .activity-info { padding: 11px; }
+      .activity-info h4 { font-size: .9rem; }
+      .activity-info p { font-size: .78rem; }
+      .activity-bottom { display: block; margin-top: 9px; }
+      .done-pill { display: block; margin-top: 4px; }
+      .panel { padding: 13px; border-radius: 20px; }
+      .piece-tray { gap: 7px; padding: 8px; }
+      .help-strip { align-items: flex-start; font-size: .82rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"><img src="./robi-portre.jpg" alt=""></div>
+        <div>
+          <h1>Robi'nin Puzzle Dünyası</h1>
+          <p>Robi'nin resimlerini seçtiğin düzeyde tamamla!</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <img class="school-logo" src="./bilfenilkokullogo.JPG.jpg" alt="Bilfen İlkokulları logosu">
+        <button class="icon-button" id="homeButton" type="button" title="Etkinliklere dön">⌂ Ana sayfa</button>
+        <button class="icon-button" id="fullscreenButton" type="button" title="Tam ekran aç">⛶ Tam ekran</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="screen active" id="homeScreen" aria-labelledby="homeTitle">
+        <div class="hero">
+          <div class="hero-copy">
+            <p class="eyebrow">9 etkinlik · 3 düzey · Robi</p>
+            <h2 id="homeTitle">Robi'nin renkli gününü puzzle ile tamamla!</h2>
+            <p>Bir etkinlik seç. Parçaları önce dokunarak, sonra doğru kareye dokunarak yerleştir. İstersen bilgisayarda sürükleyip bırakabilirsin.</p>
+          </div>
+          <div class="hero-orbit" aria-hidden="true">
+            <img class="hero-robi" src="./robi-portre.jpg" alt="">
+          </div>
+        </div>
+
+        <div class="level-picker" role="group" aria-label="Puzzle zorluk düzeyi">
+          <strong>Parça sayısını seç:</strong>
+          <button class="level-button" type="button" data-size="3x3" aria-pressed="true">Kolay · 3×3 (9 parça)</button>
+          <button class="level-button" type="button" data-size="3x5" aria-pressed="false">Orta · 3×5 (15 parça)</button>
+          <button class="level-button" type="button" data-size="5x5" aria-pressed="false">Zor · 5×5 (25 parça)</button>
+        </div>
+        <div class="activity-heading">
+          <div>
+            <h3>Bir Robi etkinliği seç</h3>
+            <p>Bir görsel ve zorluk düzeyi seçerek başla.</p>
+          </div>
+          <span class="mini-count" id="completionCount">0 / 9 tamamlandı</span>
+        </div>
+
+        <div class="activity-grid" id="activityGrid"></div>
+      </section>
+
+      <section class="screen" id="puzzleScreen" aria-labelledby="puzzleTitle">
+        <div class="puzzle-top">
+          <div class="puzzle-title">
+            <button class="icon-button back-button" id="backButton" type="button">← Etkinliklere dön</button>
+            <h2 id="puzzleTitle">Puzzle</h2>
+            <p id="puzzleSubtitle">Parçaları doğru yerlere yerleştir.</p>
+          </div>
+          <div class="puzzle-actions">
+            <button class="secondary-button" id="previewButton" type="button">👁 Görsele bak</button>
+            <button class="secondary-button" id="shuffleButton" type="button">↻ Yeniden karıştır</button>
+          </div>
+        </div>
+
+        <div class="progress-row" aria-live="polite">
+          <div class="progress-track" aria-hidden="true"><div class="progress-fill" id="progressFill"></div></div>
+          <div class="progress-label" id="progressLabel">0 / 9 doğru</div>
+        </div>
+
+        <div class="puzzle-layout">
+          <section class="panel">
+            <div class="panel-heading">
+              <h3>Robi'nin resmi</h3>
+              <p>Parçaları buradaki boş karelere yerleştir.</p>
+            </div>
+            <div class="puzzle-board" id="puzzleBoard" aria-label="3 x 3 puzzle alanı"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-heading">
+              <h3>Parçalar</h3>
+              <p>Bir parçaya dokun, sonra hedef karesine dokun.</p>
+            </div>
+            <div class="piece-tray" id="pieceTray" aria-label="Puzzle parçaları"></div>
+          </section>
+        </div>
+
+        <div class="help-strip"><span aria-hidden="true">💡</span><span><strong>İpucu:</strong> Yanlış yerdeki bir parçaya dokunarak onu tekrar parçalar alanına alabilirsin.</span></div>
+      </section>
+    </main>
+
+    <footer>Robi'nin Puzzle Dünyası · Çocuklar için eğlenceli öğrenme oyunu</footer>
+  </div>
+
+  <div class="modal" id="previewModal" hidden role="dialog" aria-modal="true" aria-labelledby="previewTitle">
+    <div class="modal-card">
+      <button class="close-x" type="button" data-close="previewModal" aria-label="Kapat">×</button>
+      <h2 id="previewTitle">Robi'nin resmi</h2>
+      <p>Resmi incele, sonra parçaları birleştirmeyi dene.</p>
+      <img id="previewImage" alt="Seçilen Robi etkinliği">
+      <div class="modal-actions"><button class="primary-button" type="button" data-close="previewModal">Puzzle'a dön</button></div>
+    </div>
+  </div>
+
+  <div class="modal" id="completeModal" hidden role="dialog" aria-modal="true" aria-labelledby="completeTitle">
+    <div class="modal-card">
+      <div class="success-stars" aria-hidden="true">★ ★ ★</div>
+      <h2 id="completeTitle">Harika tamamladın!</h2>
+      <p id="completeText">Robi'nin resmi tamamlandı.</p>
+      <div class="modal-actions">
+        <button class="secondary-button" type="button" data-close="completeModal">Resmi gör</button>
+        <button class="primary-button" id="nextButton" type="button">Sonraki puzzle →</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const activities = [
+      { title: "Kitap okuyan Robi", short: "Hikâye zamanı", icon: "📚", file: "robi-kitap.png" },
+      { title: "Ders çalışan Robi", short: "Öğrenme zamanı", icon: "📘", file: "robi-ders.png" },
+      { title: "İp atlayan Robi", short: "Hareket zamanı", icon: "🪢", file: "robi-ip.png" },
+      { title: "Bilgisayar başında Robi", short: "Teknoloji zamanı", icon: "💻", file: "robi-bilgisayar.png" },
+      { title: "Resim yapan Robi", short: "Sanat zamanı", icon: "🎨", file: "robi-resim.png" },
+      { title: "Oyun oynayan Robi", short: "Oyun zamanı", icon: "🧩", file: "robi-oyun.png" },
+      { title: "Parka giden Robi", short: "Keşif zamanı", icon: "🌳", file: "robi-park.png" },
+      { title: "Deney yapan Robi", short: "Bilim zamanı", icon: "🧪", file: "robi-deney.png" },
+      { title: "Müzik yapan Robi", short: "Ritim zamanı", icon: "🎹", file: "robi-muzik.png" }
+    ];
+
+    const asset = file => `./${file}`;
+    const homeScreen = document.getElementById("homeScreen");
+    const puzzleScreen = document.getElementById("puzzleScreen");
+    const activityGrid = document.getElementById("activityGrid");
+    const completionCount = document.getElementById("completionCount");
+    const puzzleBoard = document.getElementById("puzzleBoard");
+    const pieceTray = document.getElementById("pieceTray");
+    const puzzleTitle = document.getElementById("puzzleTitle");
+    const puzzleSubtitle = document.getElementById("puzzleSubtitle");
+    const progressFill = document.getElementById("progressFill");
+    const progressLabel = document.getElementById("progressLabel");
+    const previewModal = document.getElementById("previewModal");
+    const completeModal = document.getElementById("completeModal");
+    const previewImage = document.getElementById("previewImage");
+    const completeText = document.getElementById("completeText");
+
+    let currentActivity = 0;
+    let gridCols = 3;
+    let gridRows = 3;
+    const pieceCount = () => gridCols * gridRows;
+    const levelKey = () => `${gridCols}x${gridRows}`;
+    let board = Array(pieceCount()).fill(null);
+    let tray = [];
+    let selectedPiece = null;
+    let dragPiece = null;
+    let moves = 0;
+    let completeShown = false;
+    let solved = new Set(JSON.parse(localStorage.getItem("robi-puzzle-solved") || "[]"));
+
+    function shuffle(list) {
+      const result = [...list];
+      for (let i = result.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [result[i], result[j]] = [result[j], result[i]];
+      }
+      return result;
+    }
+
+    function makeShuffledPieces() {
+      let result = shuffle([...Array(pieceCount()).keys()]);
+      while (result.every((value, index) => value === index)) result = shuffle([...Array(pieceCount()).keys()]);
+      return result;
+    }
+
+    function renderActivityCards() {
+      completionCount.textContent = `${activities.filter((_, index) => solved.has(`${index}-${levelKey()}`)).length} / ${activities.length} tamamlandı`;
+      activityGrid.innerHTML = activities.map((item, index) => `
+        <button class="activity-card" type="button" data-activity="${index}" aria-label="${item.title} puzzleını aç">
+          <span class="activity-image-wrap">
+            <img src="${asset(item.file)}" alt="${item.title}" loading="lazy">
+            <span class="activity-badge">${item.icon} ${index + 1}. puzzle</span>
+          </span>
+          <span class="activity-info">
+            <span class="activity-info-title"><h4>${item.title}</h4></span>
+            <p>${item.short}</p>
+            <span class="activity-bottom">
+              <span class="activity-action">Puzzleı aç →</span>
+              <span class="done-pill">${solved.has(`${index}-${levelKey()}`) ? "✓ Tamamlandı" : `${pieceCount()} parça`}</span>
+            </span>
+          </span>
+        </button>
+      `).join("");
+
+      activityGrid.querySelectorAll("[data-activity]").forEach(card => {
+        card.addEventListener("click", () => startActivity(Number(card.dataset.activity)));
+      });
+    }
+
+    function showScreen(screen) {
+      homeScreen.classList.toggle("active", screen === "home");
+      puzzleScreen.classList.toggle("active", screen === "puzzle");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function startActivity(index) {
+      currentActivity = index;
+      showScreen("puzzle");
+      resetPuzzle();
+    }
+
+    function resetPuzzle() {
+      board = Array(pieceCount()).fill(null);
+      tray = makeShuffledPieces();
+      selectedPiece = null;
+      dragPiece = null;
+      moves = 0;
+      completeShown = false;
+      puzzleTitle.textContent = activities[currentActivity].title;
+      puzzleSubtitle.textContent = `${activities[currentActivity].short}. ${gridCols}×${gridRows} kareyi doğru yerlere yerleştir.`;
+      for (const el of [puzzleBoard, pieceTray]) {
+        el.style.setProperty("--grid-cols", gridCols);
+        el.style.setProperty("--grid-rows", gridRows);
+      }
+      puzzleBoard.setAttribute("aria-label", `${gridCols} x ${gridRows} puzzle alanı`);
+      renderPuzzle();
+    }
+
+    function makeTile(pieceId, inBoard) {
+      const tile = document.createElement("button");
+      const row = Math.floor(pieceId / gridCols);
+      const col = pieceId % gridCols;
+      tile.type = "button";
+      tile.className = `tile${selectedPiece === pieceId ? " selected" : ""}`;
+      tile.setAttribute("aria-label", `Puzzle parçası ${pieceId + 1}`);
+      tile.title = "Bu parçayı seç";
+      tile.draggable = true;
+      tile.style.backgroundImage = `url("${asset(activities[currentActivity].file)}")`;
+      tile.style.backgroundSize = `${gridCols * 100}% ${gridRows * 100}%`;
+      tile.style.backgroundPosition = `${col * 100 / (gridCols - 1)}% ${row * 100 / (gridRows - 1)}%`;
+      tile.addEventListener("click", event => {
+        event.stopPropagation();
+        if (inBoard) {
+          const placedAt = board.indexOf(pieceId);
+          if (placedAt !== -1) {
+            board[placedAt] = null;
+            tray.push(pieceId);
+            selectedPiece = null;
+            moves++;
+            renderPuzzle();
+          }
+          return;
+        }
+        selectedPiece = selectedPiece === pieceId ? null : pieceId;
+        renderPuzzle();
+      });
+      tile.addEventListener("dragstart", event => {
+        dragPiece = pieceId;
+        selectedPiece = pieceId;
+        tile.classList.add("dragging");
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("text/plain", String(pieceId));
+      });
+      tile.addEventListener("dragend", () => {
+        dragPiece = null;
+        tile.classList.remove("dragging");
+      });
+      return tile;
+    }
+
+    function placeSelected(slotIndex) {
+      const pieceId = selectedPiece;
+      if (pieceId === null) {
+        if (board[slotIndex] !== null) {
+          tray.push(board[slotIndex]);
+          board[slotIndex] = null;
+          moves++;
+          renderPuzzle();
+        }
+        return;
+      }
+
+      const sourceIndex = board.indexOf(pieceId);
+      const displaced = board[slotIndex];
+      if (sourceIndex === slotIndex) {
+        selectedPiece = null;
+        renderPuzzle();
+        return;
+      }
+
+      if (sourceIndex !== -1) {
+        board[sourceIndex] = displaced;
+      } else {
+        tray = tray.filter(piece => piece !== pieceId);
+        if (displaced !== null) tray.push(displaced);
+      }
+      board[slotIndex] = pieceId;
+      selectedPiece = null;
+      moves++;
+      renderPuzzle();
+    }
+
+    function renderPuzzle() {
+      puzzleBoard.innerHTML = "";
+      board.forEach((pieceId, slotIndex) => {
+        const slot = document.createElement("div");
+        slot.className = "slot";
+        slot.tabIndex = 0;
+        slot.setAttribute("role", "button");
+        slot.setAttribute("aria-label", `Puzzle karesi ${slotIndex + 1}`);
+        if (pieceId !== null) {
+          slot.appendChild(makeTile(pieceId, true));
+          if (pieceId === slotIndex) slot.classList.add("correct");
+        }
+        slot.addEventListener("click", () => placeSelected(slotIndex));
+        slot.addEventListener("keydown", event => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            placeSelected(slotIndex);
+          }
+        });
+        slot.addEventListener("dragover", event => event.preventDefault());
+        slot.addEventListener("drop", event => {
+          event.preventDefault();
+          const fromData = event.dataTransfer.getData("text/plain");
+          const piece = fromData === "" ? dragPiece : Number(fromData);
+          if (Number.isInteger(piece)) {
+            selectedPiece = piece;
+            placeSelected(slotIndex);
+          }
+        });
+        puzzleBoard.appendChild(slot);
+      });
+
+      pieceTray.innerHTML = "";
+      if (tray.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "tray-empty";
+        empty.textContent = "Bütün parçalar yerleşti! Şimdi resmi tamamla.";
+        pieceTray.appendChild(empty);
+      } else {
+        tray.forEach(pieceId => pieceTray.appendChild(makeTile(pieceId, false)));
+      }
+      updateProgress();
+    }
+
+    function updateProgress() {
+      const correct = board.reduce((count, piece, index) => count + (piece === index ? 1 : 0), 0);
+      progressLabel.textContent = `${correct} / ${pieceCount()} doğru`;
+      progressFill.style.width = `${correct * 100 / (pieceCount())}%`;
+      if (correct === pieceCount() && !completeShown) {
+        completeShown = true;
+        solved.add(`${currentActivity}-${levelKey()}`);
+        localStorage.setItem("robi-puzzle-solved", JSON.stringify([...solved]));
+        completeText.textContent = `${activities[currentActivity].title} puzzleını ${moves} hamlede tamamladın. Robi seninle gurur duyuyor!`;
+        setTimeout(() => openModal(completeModal), 350);
+      }
+    }
+
+    function openModal(modal) {
+      modal.hidden = false;
+    }
+
+    function closeModal(modal) {
+      modal.hidden = true;
+    }
+
+    document.getElementById("homeButton").addEventListener("click", () => {
+      closeModal(previewModal);
+      closeModal(completeModal);
+      renderActivityCards();
+      showScreen("home");
+    });
+    document.getElementById("backButton").addEventListener("click", () => {
+      renderActivityCards();
+      showScreen("home");
+    });
+    document.getElementById("shuffleButton").addEventListener("click", resetPuzzle);
+    document.querySelectorAll("[data-size]").forEach(button => button.addEventListener("click", () => {
+      [gridCols, gridRows] = button.dataset.size.split("x").map(Number);
+      document.querySelectorAll("[data-size]").forEach(option => option.setAttribute("aria-pressed", String(option === button)));
+      renderActivityCards();
+    }));
+    document.getElementById("previewButton").addEventListener("click", () => {
+      previewImage.src = asset(activities[currentActivity].file);
+      previewImage.alt = activities[currentActivity].title;
+      openModal(previewModal);
+    });
+    document.getElementById("nextButton").addEventListener("click", () => {
+      closeModal(completeModal);
+      startActivity((currentActivity + 1) % activities.length);
+    });
+    document.querySelectorAll("[data-close]").forEach(button => {
+      button.addEventListener("click", () => closeModal(document.getElementById(button.dataset.close)));
+    });
+    [previewModal, completeModal].forEach(modal => {
+      modal.addEventListener("click", event => {
+        if (event.target === modal) closeModal(modal);
+      });
+    });
+    document.getElementById("fullscreenButton").addEventListener("click", async () => {
+      try {
+        if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
+        else await document.exitFullscreen();
+      } catch (error) {
+        // Tarayıcı tam ekranı desteklemiyorsa oyun normal pencerede devam eder.
+      }
+    });
+
+    renderActivityCards();
+  </script>
+</body>
+</html>
